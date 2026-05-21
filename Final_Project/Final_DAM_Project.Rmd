@@ -1,0 +1,145 @@
+---
+title: "Final_DAM_Project"
+authors: Johanne Ø. Daugbjerg, Anders Pedersen, Benjamin Dammeyer
+output: html_document
+date: "2026-05-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+
+data <- read_csv("Perlestikker_begravelser.csv")
+```
+
+## R Markdown
+
+```{r graphs}
+# title: "Final_DAM_Project"
+# authors: Johanne Ø. Daugbjerg, Anders Pedersen, Benjamin Dammeyer
+# output: html_document
+# date: "2026-05-13"
+
+
+# Total amount of burials each year 1618-1626
+data %>%
+  count(year) %>%
+  ggplot(aes(x = factor(year), y = n)) +
+  geom_col(width = 0.7, fill = "grey70", color = "black") +
+  geom_text(aes(label = n), vjust = -0.3, size = 5) +
+  labs(
+    title = "Burials in Nakskov Parish, 1618–1626",
+    subtitle = "Based on Anders Pedersen Perlestikker’s burial records",
+    x = "Year",
+    y = "Number of Burials"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave(
+  "burials_graph.png",
+  width = 10,
+  height = 6,
+)
+
+
+# Male versus female
+names(data)
+
+total_data <- data %>%
+  count(year)
+
+gender_data <- data %>%
+  filter(demographic_category %in% c("mand", "kvinde")) %>%
+  count(year, demographic_category)
+
+ggplot()+
+  geom_col(
+    data = total_data,
+    aes(x = factor(year), y = n),
+    fill = "grey70",
+    color = "black",
+    width = 0.7
+  ) +
+  geom_col(
+    data = gender_data,
+    aes(x = factor(year),
+        y = n,
+        fill = demographic_category),
+    position = "stack",
+    width = 0.5
+  ) +
+  geom_text(
+    data = gender_data,
+    aes(x = factor(year),
+        y = n,
+        label = n,
+        group = demographic_category),
+    position = position_stack(vjust = 0.5),
+    color = "white",
+    size = 4
+  ) +
+  scale_fill_manual(values = c(
+    "mand" = "blue",
+    "kvinde" = "red"
+  )) +
+  labs(
+    title = "Burials by Gender in Nakskov Parish, 1618-1626",
+    subtitle = "Based on Anders Pedersen Perlestikker's burial records",
+    x = "Year",
+    y = "Number of Burials",
+    fill = "Gender"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave(
+  "figure_gender_burials.png",
+  width = 10,
+  height = 6
+)
+
+
+# Burial Locations (K/B/C)
+burial_data <- data %>%
+  filter(burial_location %in% c("K", "B", "C") |
+           is.na(burial_location))
+
+ggplot(
+  burial_data %>%
+    count(year, burial_location),
+  aes(x = factor(year),
+      y = n,
+      fill = burial_location)
+) +
+  geom_col(position = "dodge",
+           color = "black",
+           width = 0.7) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.7),
+            vjust = -0.3,
+            size = 4) +
+  scale_fill_manual(values = c(
+    "K" = "steelblue",
+    "B" = "firebrick",
+    "C" = "goldenrod",
+    "NA" = "grey70"
+  )) +
+  labs(
+    title = "Burial Locations over Time",
+    subtitle = "Distribution of burial types in Nakskov, 1618-1626",
+    x = "Year",
+    y = "Number og Burials",
+    fill = "Burial Type"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave(
+  "figure_burial_locations.png",
+  width = 10,
+  height = 6
+)
+
+```
+
